@@ -20,7 +20,7 @@ const SCORE = {
     // 동점이면 마지막 장면부터 돌아보며 동점 캐릭터에 해당하는 가장 최근 선택을 사용한다.
     const max = Math.max(...Object.values(counts));
     const key = [...answers].reverse().find(k => counts[k] === max);
-    return { ...t.profiles[key], label: '나랑 닮은 먼작귀 친구', num: max, unit: ' / ' + answers.length,
+    return { ...t.profiles[key], portraitKey:key, label: '나랑 닮은 먼작귀 친구', num: max, unit: ' / ' + answers.length,
       sub: '닮은 선택', goodTitle: '이 선택에서 닮았어요', good: t.items.flatMap((q,i) => answers[i] === key ? [q.o.find(o => o[1] === key)[0]] : []),
       note: '오늘의 선택으로 보는 비공식 팬 테스트예요.' };
   },
@@ -55,6 +55,9 @@ const SCORE = {
   },
 };
 
+const portraitSources = {"chi": "https://www.pinterest.com/ideas/chiikawa-transparent-png/896191911143/", "hachi": "https://www.pinterest.com/pin/hachiware-in-2024--864480091006382750/", "usa": "https://www.pinterest.com/ideas/usagi-chiikawa-icon/893846314408/", "momo": "https://www.pinterest.com/ideas/momonga-chiikawa-pfp/931594906362/", "kuri": "https://fr.pinterest.com/pin/chikawaii--138345019797394918/", "rakko": "https://www.pinterest.com/ideas/chiikawa-rakko/910219186587/", "shisa": "https://www.chiikawaofficial.com/"};
+const portrait = (k) => `<img class="friend-face" src="portraits/${k}.webp" alt="${TESTS.chiikawa.profiles[k].name}">`;
+const friends = () => `<div class="friend-line">${Object.keys(portraitSources).map(portrait).join('')}</div>`;
 const rowsHtml = skip => Object.entries(TESTS).filter(([k]) => k !== skip).map(([k, t]) => `
   <a class="row" href="#/t/${k}">
     <span class="row-ico">${t.mark}</span>
@@ -65,7 +68,7 @@ const rowsHtml = skip => Object.entries(TESTS).filter(([k]) => k !== skip).map((
 function home() {
   app.innerHTML = `
     <section aria-labelledby="shelf"><p class="kicker">TODAY’S COLLECTION</p><h1 id="shelf">오늘은 어떤 테스트?</h1>
-    <div class="shelf">${Object.entries(TESTS).map(([key,t],i)=>`<a class="tile" href="#/t/${key}"><span class="tile-top"><span>TEST / 0${i+1}</span><span aria-hidden="true">↗</span></span><span class="tile-icon" aria-hidden="true">${t.mark}</span><strong>${t.title}</strong><span class="blurb">${t.desc}</span><small>${t.items.length}문항 · ${t.limit?'4분':'약 2분'}</small></a>`).join('')}</div></section>`;
+    <div class="shelf">${Object.entries(TESTS).map(([key,t],i)=>`<a class="tile" href="#/t/${key}"><span class="tile-top"><span>TEST / 0${i+1}</span><span aria-hidden="true">↗</span></span><span class="tile-icon" aria-hidden="true">${key === "chiikawa" ? portrait("chi") : t.mark}</span><strong>${t.title}</strong><span class="blurb">${t.desc}</span><small>${t.items.length}문항 · ${t.limit?'4분':'약 2분'}</small></a>`).join('')}</div></section>`;
 }
 
 function intro(key) {
@@ -73,7 +76,7 @@ function intro(key) {
   app.innerHTML = `
     <a class="back" href="#/">← 홈</a>
     <section class="card intro">
-      <div class="big-ico">${t.mark}</div>
+      ${key === "chiikawa" ? friends() : `<div class="big-ico">${t.mark}</div>`}
       <h1>${t.title}</h1>
       <p>${t.intro}</p>
       <p class="meta">${t.kind === 'quiz' ? t.time : `${t.items.length}문항 · ${t.time}`}</p>
@@ -146,7 +149,7 @@ function result(key, r) {
   const t = TESTS[key];
   app.innerHTML = `
     <section class="card res-head">
-      <div class="big-ico">${r.mark}</div>
+      ${r.portraitKey ? `<div class="friend-result">${portrait(r.portraitKey)}<a href="${portraitSources[r.portraitKey]}" target="_blank" rel="noopener noreferrer">이미지 출처 ↗</a></div>` : `<div class="big-ico">${r.mark}</div>`}
       <p class="res-label">${r.label}</p>
       <h1>${r.name}</h1>
       <p class="res-num">${r.num}<small>${r.unit}</small></p>
