@@ -1,5 +1,5 @@
 const app = document.getElementById('app');
-const TESTS = window.TESTS;
+const TESTS = { chiikawa: window.TESTS.chiikawa, ...window.TESTS };
 let run = null; // { key, i, answers, deadline, timer }
 
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
