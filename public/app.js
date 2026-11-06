@@ -69,7 +69,17 @@ const SCORE = {
 const portraitSources = {"chi": "https://www.pinterest.com/ideas/chiikawa-transparent-png/896191911143/", "hachi": "https://www.pinterest.com/pin/hachiware-in-2024--864480091006382750/", "usa": "https://www.pinterest.com/ideas/usagi-chiikawa-icon/893846314408/", "momo": "https://www.pinterest.com/ideas/momonga-chiikawa-pfp/931594906362/", "kuri": "https://fr.pinterest.com/pin/chikawaii--138345019797394918/", "rakko": "https://www.pinterest.com/ideas/chiikawa-rakko/910219186587/", "shisa": "https://www.chiikawaofficial.com/"};
 const portrait = (k) => `<img class="friend-face" src="portraits/${k}.webp" alt="${TESTS.chiikawa.profiles[k].name}">`;
 const friends = () => `<div class="friend-line">${Object.keys(portraitSources).map(portrait).join('')}</div>`;
-const testArt = key => `<img class="test-art" src="test-art/${key}.png" alt="">`;
+// 원본 파일은 유지하고 그림 주변의 빈 여백만 뷰박스로 정리한다.
+const artFrames = {
+  empathy: [561,478,97,112,332,328], iq: [736,736,20,13,667,732],
+  friend: [1080,1080,76,94,953,923], attach: [735,470,29,53,678,375],
+  love: [1199,1109,68,180,1067,766],
+};
+const testArt = key => {
+  const [w,h,x,y,vw,vh] = artFrames[key];
+  const ratio = Math.sqrt(vw/vh);
+  return `<svg class="test-art" aria-hidden="true" focusable="false" style="width:${ratio}em;height:${1/ratio}em" viewBox="${x} ${y} ${vw} ${vh}"><image href="test-art/${key}.png" width="${w}" height="${h}"/></svg>`;
+};
 const cardsHtml = skip => Object.entries(TESTS).filter(([k]) => k !== skip).map(([k, t]) => `
   <a class="tcard" href="#/t/${k}">
     <span class="tcard-ico">${k === "chiikawa" ? portrait("chi") : testArt(k)}</span>

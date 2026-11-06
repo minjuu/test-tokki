@@ -87,4 +87,9 @@ footer { padding: 20px 16px 32px; text-align: center; font-size: 12.5px; color: 
 .opt.on { background: #4e5968; color: #fff; }
 .prev { display: block; margin: 16px auto 0; }
 @media (max-width: 560px) { .q { font-size: 20px; } }
-.test-art{display:block;object-fit:contain;background:white;border-radius:10px}.tcard-ico:has(.test-art){height:68px}.tcard-ico .test-art{width:100%;height:68px;object-position:left center}.big-ico .test-art{width:min(200px,100%);height:132px;margin:0 auto 12px}
+/* 동일한 그림 면적을 확보하되 가로로 긴 그림도 찌그러뜨리지 않는다. */
+.test-art{display:block;overflow:hidden;max-width:100%}
+.tcard-ico{height:76px;width:min(104px,100%);display:grid;place-items:center;font-size:66px}
+.tcard-ico .friend-face{width:66px;height:66px}
+.big-ico:has(.test-art),.friend-result{height:146px;display:grid;place-items:center;margin:0 auto 12px;font-size:126px}
+.friend-result .friend-face{width:126px;height:126px}
