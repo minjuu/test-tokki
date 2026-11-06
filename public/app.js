@@ -49,9 +49,11 @@ const SCORE = {
     return { ...t.results.find(r => iq >= r.min), label: '나의 두뇌 유형', num: iq, unit: '', sub: `${t.items.length}문제 중 ${correct}문제 정답`,
       note: '이 사이트에서 만든 재미용 추정치예요. 공인 지능검사 결과가 아니에요.' };
   },
-  mental(t, ans) {
-    const age = Math.round(ans.reduce((a, b) => a + b, 0) / ans.length);
-    return { ...t.results.find(r => age >= r.min), label: '나의 정신연령', num: age, unit: '세' };
+  friend(t, answers) {
+    const counts = Object.fromEntries(Object.keys(t.results).map(k => [k, answers.filter(a => a === k).length]));
+    const max = Math.max(...Object.values(counts));
+    const k = [...answers].reverse().find(a => counts[a] === max);
+    return {...t.results[k],label:'나와 특히 안 맞는 유형',num:max,unit:' / 3',sub:'이 유형이 나온 세 장면 중 선택한 횟수',goodTitle:'특히 불편했던 순간',good:t.items.flatMap((q,i)=>answers[i]===k?[q.o.find(o=>o[1]===k)[0]]:[]),tipTitle:'이렇게 말해봐요',note:'친구의 성격을 단정하는 결과가 아니라, 내가 중요하게 여기는 관계의 기준이에요.'};
   },
   attach(t, ans) {
     const sum = { anx: 0, avo: 0 }, n = { anx: 0, avo: 0 };
@@ -67,9 +69,10 @@ const SCORE = {
 const portraitSources = {"chi": "https://www.pinterest.com/ideas/chiikawa-transparent-png/896191911143/", "hachi": "https://www.pinterest.com/pin/hachiware-in-2024--864480091006382750/", "usa": "https://www.pinterest.com/ideas/usagi-chiikawa-icon/893846314408/", "momo": "https://www.pinterest.com/ideas/momonga-chiikawa-pfp/931594906362/", "kuri": "https://fr.pinterest.com/pin/chikawaii--138345019797394918/", "rakko": "https://www.pinterest.com/ideas/chiikawa-rakko/910219186587/", "shisa": "https://www.chiikawaofficial.com/"};
 const portrait = (k) => `<img class="friend-face" src="portraits/${k}.webp" alt="${TESTS.chiikawa.profiles[k].name}">`;
 const friends = () => `<div class="friend-line">${Object.keys(portraitSources).map(portrait).join('')}</div>`;
+const testArt = key => `<img class="test-art" src="test-art/${key}.png" alt="">`;
 const cardsHtml = skip => Object.entries(TESTS).filter(([k]) => k !== skip).map(([k, t]) => `
   <a class="tcard" href="#/t/${k}">
-    <span class="tcard-ico">${k === "chiikawa" ? portrait("chi") : t.mark}</span>
+    <span class="tcard-ico">${k === "chiikawa" ? portrait("chi") : testArt(k)}</span>
     <b>${t.title}</b>
     <small>${t.desc}</small>
   </a>`).join('');
@@ -85,7 +88,7 @@ function intro(key) {
   app.innerHTML = `
     <a class="back" href="#/">← 홈</a>
     <section class="card intro">
-      ${key === "chiikawa" ? friends() : `<div class="big-ico">${t.mark}</div>`}
+      ${key === "chiikawa" ? friends() : `<div class="big-ico">${testArt(key)}</div>`}
       <h1>${t.title}</h1>
       <p>${t.intro}</p>
       <p class="meta">${t.kind === 'quiz' ? t.time : `${t.items.length}문항 · ${t.time}`}</p>
@@ -159,7 +162,7 @@ function result(key, r) {
   const t = TESTS[key];
   app.innerHTML = `
     <section class="card res-head">
-      ${r.portraitKey ? `<div class="friend-result">${portrait(r.portraitKey)}</div>` : `<div class="big-ico">${r.mark}</div>`}
+      ${r.portraitKey ? `<div class="friend-result">${portrait(r.portraitKey)}</div>` : `<div class="big-ico">${testArt(key)}</div>`}
       <p class="res-label">${r.label}</p>
       <h1>${r.name}</h1>
       <p class="res-num">${r.num}<small>${r.unit}</small></p>
@@ -170,7 +173,7 @@ function result(key, r) {
       <div class="bar"><div class="bar-top"><span>${n}</span><em>${v}</em></div><div class="bar-track"><i style="width:${v}%"></i></div></div>`).join('')}</section>` : ''}
     <section class="card"><h2>${r.goodTitle || '이런 점이 좋아요'}</h2><ul>${r.good.map(x => `<li>${x}</li>`).join('')}</ul></section>
     ${r.match ? `<section class="card"><h2>잘 맞는 사람</h2><p class="body">${r.match}</p></section>` : ''}
-    <section class="card"><h2>이렇게 해보세요</h2><ul>${r.tip.map(x => `<li>${x}</li>`).join('')}</ul></section>
+    <section class="card"><h2>${r.tipTitle || '이렇게 해보세요'}</h2><ul>${r.tip.map(x => `<li>${x}</li>`).join('')}</ul></section>
     ${r.note ? `<p class="note">${r.note}</p>` : ''}
     <div style="margin-top:14px">
       <button class="primary" id="share">결과 공유하기</button>
@@ -205,6 +208,7 @@ function route() {
   stopTimer();
   run = null;
   const [, page, key] = location.hash.split('/');
+  if (page === 't' && key === 'mental') { location.replace('#/t/friend'); return; }
   if (page === 't' && TESTS[key]) intro(key); else home();
   window.scrollTo(0, 0);
 }
