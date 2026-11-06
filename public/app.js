@@ -59,7 +59,8 @@ const SCORE = {
     const sum = { anx: 0, avo: 0 }, n = { anx: 0, avo: 0 };
     t.items.forEach((q, i) => { sum[q.d] += ans[i]; n[q.d]++; });
     const anx = pct(sum.anx, n.anx), avo = pct(sum.avo, n.avo);
-    const key = anx < 50 ? (avo < 50 ? 'secure' : 'avoidant') : (avo < 50 ? 'anxious' : 'fearful');
+    // 두 답변 모두 자연스러워서 절반을 넘겨야 그 성향으로 본다
+    const key = anx <= 50 ? (avo <= 50 ? 'secure' : 'avoidant') : (avo <= 50 ? 'anxious' : 'fearful');
     const stable = 100 - Math.round((anx + avo) / 2);
     return { ...t.results[key], label: '나의 애착 유형', num: stable, unit: '%', sub: '안정 지수',
       bars: [['불안', anx], ['회피', avo]], note: '자기 보고로 경향만 살펴보는 테스트예요. 진단이 아니에요.' };
