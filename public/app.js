@@ -24,6 +24,14 @@ const SCORE = {
       sub: '닮은 선택', goodTitle: '이 선택에서 닮았어요', good: t.items.flatMap((q,i) => answers[i] === key ? [q.o.find(o => o[1] === key)[0]] : []),
       note: '오늘의 선택으로 보는 비공식 팬 테스트예요.' };
   },
+  love(t, ans) {
+    const c = Object.fromEntries(Object.keys(t.results).map(k => [k, 0]));
+    ans.forEach(k => c[k]++);
+    const top = Object.entries(c).sort((a, b) => b[1] - a[1]);
+    const pc = v => Math.round(v / ans.length * 100);
+    return { ...t.results[top[0][0]], label: '나의 연애 유형', num: pc(top[0][1]), unit: '%', sub: '이 유형과 닮은 정도',
+      bars: top.map(([k, v]) => [t.results[k].name, pc(v)]) };
+  },
   empathy(t, ans) {
     const dims = {};
     t.items.forEach((q, i) => {
@@ -60,15 +68,15 @@ const portrait = (k) => `<img class="friend-face" src="portraits/${k}.webp" alt=
 const friends = () => `<div class="friend-line">${Object.keys(portraitSources).map(portrait).join('')}</div>`;
 const rowsHtml = skip => Object.entries(TESTS).filter(([k]) => k !== skip).map(([k, t]) => `
   <a class="row" href="#/t/${k}">
-    <span class="row-ico">${t.mark}</span>
+    <span class="row-ico">${k === "chiikawa" ? portrait("chi") : t.mark}</span>
     <span class="row-txt"><b>${t.title}</b><small>${t.desc}</small></span>
     <span class="chev" aria-hidden="true">›</span>
   </a>`).join('');
 
 function home() {
   app.innerHTML = `
-    <section aria-labelledby="shelf"><p class="kicker">TODAY’S COLLECTION</p><h1 id="shelf">오늘은 어떤 테스트?</h1>
-    <div class="shelf">${Object.entries(TESTS).map(([key,t],i)=>`<a class="tile" href="#/t/${key}"><span class="tile-top"><span>TEST / 0${i+1}</span><span aria-hidden="true">↗</span></span><span class="tile-icon" aria-hidden="true">${key === "chiikawa" ? portrait("chi") : t.mark}</span><strong>${t.title}</strong><span class="blurb">${t.desc}</span><small>${t.items.length}문항 · ${t.limit?'4분':'약 2분'}</small></a>`).join('')}</div></section>`;
+    <section class="hero"><h1>오늘의 나를<br>알아보는 시간</h1><p>궁금한 테스트를 골라보세요.</p></section>
+    <div class="list">${rowsHtml()}</div>`;
 }
 
 function intro(key) {
@@ -159,6 +167,7 @@ function result(key, r) {
     ${r.bars ? `<section class="card"><h2>영역별 점수</h2>${r.bars.map(([n, v]) => `
       <div class="bar"><div class="bar-top"><span>${n}</span><em>${v}</em></div><div class="bar-track"><i style="width:${v}%"></i></div></div>`).join('')}</section>` : ''}
     <section class="card"><h2>${r.goodTitle || '이런 점이 좋아요'}</h2><ul>${r.good.map(x => `<li>${x}</li>`).join('')}</ul></section>
+    ${r.match ? `<section class="card"><h2>잘 맞는 사람</h2><p class="body">${r.match}</p></section>` : ''}
     <section class="card"><h2>이렇게 해보세요</h2><ul>${r.tip.map(x => `<li>${x}</li>`).join('')}</ul></section>
     ${r.note ? `<p class="note">${r.note}</p>` : ''}
     <div style="margin-top:14px">
