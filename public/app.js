@@ -11,6 +11,8 @@ const shuffle = a => {
   }
   return r;
 };
+// 익명 방문 통계: 테스트 시작과 완료를 따로 센다
+const track = name => window.goatcounter?.count?.({ path: name, title: name, event: true });
 const pct = (sum, n) => Math.round(sum / n * 100);
 
 // 채점: 답안을 받아 결과 객체를 돌려줘요
@@ -95,6 +97,7 @@ function intro(key) {
 function start(key) {
   stopTimer();
   const t = TESTS[key];
+  track(`시작-${key}`);
   run = { key, i: 0, answers: [], items: t.items.map(q => ({ ...q, o: shuffle(q.o) })) };
   if (t.limit) {
     run.deadline = Date.now() + t.limit * 1000;
@@ -148,6 +151,7 @@ function finish() {
   const ans = t.items.map(q => run.answers[run.items.findIndex(x => x.t === q.t)]);
   const r = SCORE[key](t, ans);
   run = null;
+  track(`완료-${key}`);
   result(key, r);
 }
 
