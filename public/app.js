@@ -329,6 +329,7 @@ async function resultCanvas(key, r) {
     y = bullets(r.good, heading(r.goodTitle || '이런 점이 좋아요', y)) + 34;
     if (r.match) y = para(r.match, heading('잘 맞는 사람', y)) + 44;
     y = bullets(r.tip, heading(r.tipTitle || '이렇게 해보세요', y)) + 40;
+    if (r.note) y = para(r.note, y) + 32;
     center('오늘의테스트', y + 20, 32, 800, '#191f28');
     return y + 110;
   };
