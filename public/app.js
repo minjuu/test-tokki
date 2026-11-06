@@ -161,7 +161,7 @@ function result(key, r) {
     const url = `${location.origin}${location.pathname}#/t/${key}`;
     const text = `${t.title} 결과: ${r.name} ${r.num}${r.unit}`;
     try {
-      if (navigator.share) return await navigator.share({ title: '테스트토끼', text, url });
+      if (navigator.share) return await navigator.share({ title: '오늘의테스트', text, url });
       await navigator.clipboard.writeText(`${text}\n${url}`);
       toast('결과를 복사했어요');
     } catch (e) {
