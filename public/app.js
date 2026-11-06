@@ -155,7 +155,7 @@ function result(key, r) {
   const t = TESTS[key];
   app.innerHTML = `
     <section class="card res-head">
-      ${r.portraitKey ? `<div class="friend-result">${portrait(r.portraitKey)}<a href="${portraitSources[r.portraitKey]}" target="_blank" rel="noopener noreferrer">이미지 출처 ↗</a></div>` : `<div class="big-ico">${r.mark}</div>`}
+      ${r.portraitKey ? `<div class="friend-result">${portrait(r.portraitKey)}</div>` : `<div class="big-ico">${r.mark}</div>`}
       <p class="res-label">${r.label}</p>
       <h1>${r.name}</h1>
       <p class="res-num">${r.num}<small>${r.unit}</small></p>
