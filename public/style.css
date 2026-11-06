@@ -78,3 +78,12 @@ footer { padding: 20px 16px 32px; text-align: center; font-size: 12.5px; color: 
 }
 
 .friend-face{display:block;width:66px;height:66px;object-fit:cover;border-radius:50%;background:white;border:2px solid white}.friend-line{display:flex;justify-content:center;flex-wrap:wrap;gap:5px;margin:4px auto 20px}.tcard-ico .friend-face{width:40px;height:40px;border:0}.friend-result .friend-face{width:140px;height:140px;margin:auto}.friend-result a{font-size:11px;color:var(--muted);text-decoration:underline}@media(max-width:480px){.friend-line{max-width:250px}.friend-line .friend-face{width:50px;height:50px}}
+
+/* 문제 화면: 가운데 정렬 큰 질문 + 꽉 찬 답변 버튼 */
+.q { margin: 24px 0 32px; font-size: 22px; font-weight: 800; line-height: 1.5; letter-spacing: -0.5px; text-align: center; }
+.opts { gap: 10px; }
+.opt { padding: 18px 16px; border: 0; background: var(--ink); color: #fff; font-size: 16px; font-weight: 700; text-align: center; }
+@media (hover: hover) { .opt:hover { background: #333d4b; } }
+.opt.on { background: #4e5968; color: #fff; }
+.prev { display: block; margin: 16px auto 0; }
+@media (max-width: 560px) { .q { font-size: 20px; } }

@@ -11,7 +11,7 @@ const shuffle = a => {
   }
   return r;
 };
-const pct = (sum, n) => Math.round(sum / (n * 4) * 100);
+const pct = (sum, n) => Math.round(sum / n * 100);
 
 // 채점: 답안을 받아 결과 객체를 돌려줘요
 const SCORE = {
@@ -28,15 +28,14 @@ const SCORE = {
     const c = Object.fromEntries(Object.keys(t.results).map(k => [k, 0]));
     ans.forEach(k => c[k]++);
     const top = Object.entries(c).sort((a, b) => b[1] - a[1]);
-    const pc = v => Math.round(v / ans.length * 100);
+    const pc = v => Math.round(v / (ans.length / 2) * 100); // 한 유형은 문항의 절반에만 나온다
     return { ...t.results[top[0][0]], label: '나의 연애 유형', num: pc(top[0][1]), unit: '%', sub: '이 유형과 닮은 정도',
       bars: top.map(([k, v]) => [t.results[k].name, pc(v)]) };
   },
   empathy(t, ans) {
     const dims = {};
     t.items.forEach((q, i) => {
-      const v = q.r ? 4 - ans[i] : ans[i];
-      (dims[q.d] ||= []).push(v);
+      (dims[q.d] ||= []).push(ans[i]);
     });
     const bars = Object.entries(dims).map(([k, v]) => [t.dims[k], pct(v.reduce((a, b) => a + b, 0), v.length)]);
     const total = Math.round(bars.reduce((a, b) => a + b[1], 0) / bars.length);
@@ -54,7 +53,7 @@ const SCORE = {
   },
   attach(t, ans) {
     const sum = { anx: 0, avo: 0 }, n = { anx: 0, avo: 0 };
-    t.items.forEach((q, i) => { sum[q.d] += q.r ? 4 - ans[i] : ans[i]; n[q.d]++; });
+    t.items.forEach((q, i) => { sum[q.d] += ans[i]; n[q.d]++; });
     const anx = pct(sum.anx, n.anx), avo = pct(sum.avo, n.avo);
     const key = anx < 50 ? (avo < 50 ? 'secure' : 'avoidant') : (avo < 50 ? 'anxious' : 'fearful');
     const stable = 100 - Math.round((anx + avo) / 2);
@@ -96,7 +95,7 @@ function intro(key) {
 function start(key) {
   stopTimer();
   const t = TESTS[key];
-  run = { key, i: 0, answers: [], items: t.kind === 'quiz' ? t.items.map(q => ({ ...q, o: shuffle(q.o) })) : t.kind === 'choice' ? t.items.map(q => ({ ...q, o: shuffle(q.o) })) : shuffle(t.items) };
+  run = { key, i: 0, answers: [], items: t.items.map(q => ({ ...q, o: shuffle(q.o) })) };
   if (t.limit) {
     run.deadline = Date.now() + t.limit * 1000;
     run.timer = setInterval(tick, 1000);
@@ -114,7 +113,7 @@ function tick() {
 
 function question() {
   const t = TESTS[run.key], q = run.items[run.i], n = run.items.length;
-  const opts = t.kind === 'likert' ? LIKERT.map((l, v) => [l, v]) : t.kind === 'choice' ? q.o : q.o.map(o => [o, o]);
+  const opts = t.kind === 'choice' ? q.o : q.o.map(o => [o, o]);
   const picked = run.answers[run.i];
   app.innerHTML = `
     <section class="card">
@@ -147,8 +146,7 @@ function finish() {
   const t = TESTS[run.key], key = run.key;
   // 문항 순서를 섞었으니 원래 순서로 되돌려 채점해요
   const ans = t.items.map(q => run.answers[run.items.findIndex(x => x.t === q.t)]);
-  const fill = t.kind === 'likert' ? ans.map(a => a ?? 2) : ans;
-  const r = SCORE[key](t, fill);
+  const r = SCORE[key](t, ans);
   run = null;
   result(key, r);
 }
