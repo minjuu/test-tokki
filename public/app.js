@@ -66,17 +66,17 @@ const SCORE = {
 const portraitSources = {"chi": "https://www.pinterest.com/ideas/chiikawa-transparent-png/896191911143/", "hachi": "https://www.pinterest.com/pin/hachiware-in-2024--864480091006382750/", "usa": "https://www.pinterest.com/ideas/usagi-chiikawa-icon/893846314408/", "momo": "https://www.pinterest.com/ideas/momonga-chiikawa-pfp/931594906362/", "kuri": "https://fr.pinterest.com/pin/chikawaii--138345019797394918/", "rakko": "https://www.pinterest.com/ideas/chiikawa-rakko/910219186587/", "shisa": "https://www.chiikawaofficial.com/"};
 const portrait = (k) => `<img class="friend-face" src="portraits/${k}.webp" alt="${TESTS.chiikawa.profiles[k].name}">`;
 const friends = () => `<div class="friend-line">${Object.keys(portraitSources).map(portrait).join('')}</div>`;
-const rowsHtml = skip => Object.entries(TESTS).filter(([k]) => k !== skip).map(([k, t]) => `
-  <a class="row" href="#/t/${k}">
-    <span class="row-ico">${k === "chiikawa" ? portrait("chi") : t.mark}</span>
-    <span class="row-txt"><b>${t.title}</b><small>${t.desc}</small></span>
-    <span class="chev" aria-hidden="true">›</span>
+const cardsHtml = skip => Object.entries(TESTS).filter(([k]) => k !== skip).map(([k, t]) => `
+  <a class="tcard" href="#/t/${k}">
+    <span class="tcard-ico">${k === "chiikawa" ? portrait("chi") : t.mark}</span>
+    <b>${t.title}</b>
+    <small>${t.desc}</small>
   </a>`).join('');
 
 function home() {
   app.innerHTML = `
     <section class="hero"><h1>오늘의 나를<br>알아보는 시간</h1><p>궁금한 테스트를 골라보세요.</p></section>
-    <div class="list">${rowsHtml()}</div>`;
+    <div class="tcards">${cardsHtml()}</div>`;
 }
 
 function intro(key) {
@@ -175,7 +175,7 @@ function result(key, r) {
       <button class="ghost" id="again">다시 하기</button>
     </div>
     <p class="sec-title">다른 테스트도 해보세요</p>
-    <div class="list">${rowsHtml(key)}</div>`;
+    <div class="tcards">${cardsHtml(key)}</div>`;
   window.scrollTo(0, 0);
   document.getElementById('again').onclick = () => start(key);
   document.getElementById('share').onclick = async () => {
