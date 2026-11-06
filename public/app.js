@@ -165,10 +165,10 @@ function finish() {
   const r = SCORE[key](t, ans);
   run = null;
   track(`완료-${key}`);
-  result(key, r);
+  result(key, r, encodeAns(t, ans));
 }
 
-function result(key, r) {
+function result(key, r, code, shared) {
   const t = TESTS[key];
   app.innerHTML = `
     <section class="card res-head">
@@ -186,24 +186,151 @@ function result(key, r) {
     <section class="card"><h2>${r.tipTitle || '이렇게 해보세요'}</h2><ul>${r.tip.map(x => `<li>${x}</li>`).join('')}</ul></section>
     ${r.note ? `<p class="note">${r.note}</p>` : ''}
     <div style="margin-top:14px">
-      <button class="primary" id="share">결과 공유하기</button>
-      <button class="ghost" id="again">다시 하기</button>
+      <button class="primary" id="save">결과 이미지 저장</button>
+      <button class="ghost" id="share">결과 공유하기</button>
+      <button class="ghost" id="again">${shared ? '나도 해보기' : '다시 하기'}</button>
     </div>
     <p class="sec-title">다른 테스트도 해보세요</p>
     <div class="tcards">${cardsHtml(key)}</div>`;
   window.scrollTo(0, 0);
   document.getElementById('again').onclick = () => start(key);
+  document.getElementById('save').onclick = e => saveImage(e.currentTarget, key, r);
   document.getElementById('share').onclick = async () => {
-    const url = `${location.origin}${location.pathname}#/t/${key}`;
+    const url = `${location.origin}${location.pathname}#/r/${key}/${code}`;
     const text = `${t.title} 결과: ${r.name} ${r.num}${r.unit}`;
     try {
       if (navigator.share) return await navigator.share({ title: '오늘의테스트', text, url });
-      await navigator.clipboard.writeText(`${text}\n${url}`);
-      toast('결과를 복사했어요');
     } catch (e) {
-      if (e.name !== 'AbortError') toast('복사하지 못했어요');
+      if (e.name === 'AbortError') return;
     }
+    toast(await copyText(`${text}\n${url}`) ? '결과 링크를 복사했어요' : '복사하지 못했어요');
   };
+}
+
+// 답안을 문항별 선택지 번호로 줄여서 결과 링크에 담는다
+const optValue = o => Array.isArray(o) ? o[1] : o;
+const encodeAns = (t, ans) => t.items.map((q, i) => {
+  const x = q.o.findIndex(o => optValue(o) === ans[i]);
+  return x < 0 ? 'x' : x;
+}).join('');
+function decodeAns(t, code) {
+  if (!code || code.length !== t.items.length) return null;
+  const ans = t.items.map((q, i) => code[i] === 'x' ? undefined : q.o[+code[i]] === undefined ? null : optValue(q.o[+code[i]]));
+  if (ans.includes(null) || (t.kind === 'choice' && ans.includes(undefined))) return null;
+  return ans;
+}
+
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    const el = document.createElement('textarea');
+    el.value = text;
+    document.body.append(el);
+    el.select();
+    const ok = document.execCommand('copy');
+    el.remove();
+    return ok;
+  }
+}
+
+function wrapText(ctx, text, width, maxLines) {
+  const lines = [];
+  let line = '';
+  for (const word of text.split(' ')) {
+    const next = line ? `${line} ${word}` : word;
+    if (ctx.measureText(next).width > width && line) { lines.push(line); line = word; } else line = next;
+  }
+  lines.push(line);
+  if (lines.length > maxLines) {
+    lines.length = maxLines;
+    lines[maxLines - 1] += '…';
+  }
+  return lines;
+}
+
+const loadImage = src => new Promise((ok, fail) => {
+  const img = new Image();
+  img.onload = () => ok(img);
+  img.onerror = fail;
+  img.src = src;
+});
+
+async function resultCanvas(key, r) {
+  const W = 1080, H = 1350, font = "'Apple SD Gothic Neo', 'Pretendard', sans-serif";
+  const canvas = document.createElement('canvas');
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  const write = (text, y, size, weight, color) => {
+    ctx.font = `${weight} ${size}px ${font}`;
+    ctx.fillStyle = color;
+    ctx.fillText(text, W / 2, y);
+  };
+  await document.fonts?.ready;
+  ctx.fillStyle = '#f2f4f6';
+  ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(60, 60, W - 120, H - 120, 48); else ctx.rect(60, 60, W - 120, H - 120);
+  ctx.fill();
+  ctx.textAlign = 'center';
+  write(TESTS[key].title, 160, 36, 700, '#6b7684');
+  const src = r.portraitKey ? `portraits/${r.portraitKey}.webp` : `test-art/${key}.png`;
+  const art = await loadImage(src).catch(() => null);
+  if (art) {
+    const k = Math.min(280 / art.width, 280 / art.height);
+    ctx.drawImage(art, W / 2 - art.width * k / 2, 340 - art.height * k / 2, art.width * k, art.height * k);
+  } else if (r.mark) write(r.mark, 400, 180, 400, '#191f28');
+  write(r.label, 540, 34, 500, '#6b7684');
+  write(r.name, 625, 68, 800, '#191f28');
+  write(`${r.num}${r.unit}`, 745, 92, 800, '#191f28');
+  if (r.sub) write(r.sub, 800, 30, 500, '#6b7684');
+  ctx.font = `500 36px ${font}`;
+  ctx.fillStyle = '#333d4b';
+  wrapText(ctx, r.sum, 820, 6).forEach((line, i) => ctx.fillText(line, W / 2, 900 + i * 56));
+  write('오늘의테스트', 1240, 32, 800, '#191f28');
+  return canvas;
+}
+
+function showImage(url) {
+  const el = document.createElement('div');
+  el.className = 'overlay';
+  el.innerHTML = `<img src="${url}" alt="결과 이미지"><p>이미지를 길게 눌러 저장해 주세요</p><button class="ghost">닫기</button>`;
+  el.querySelector('button').onclick = () => el.remove();
+  document.body.append(el);
+}
+
+async function saveImage(btn, key, r) {
+  btn.disabled = true;
+  try {
+    const canvas = await resultCanvas(key, r);
+    const blob = await new Promise(ok => canvas.toBlob(ok, 'image/png'));
+    const name = `오늘의테스트-${r.name}.png`;
+    const file = new File([blob], name, { type: 'image/png' });
+    const touch = matchMedia('(pointer: coarse)').matches;
+    if (touch && navigator.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file] });
+      } catch (e) {
+        if (e.name !== 'AbortError') showImage(canvas.toDataURL('image/png'));
+      }
+    } else if (touch) {
+      showImage(canvas.toDataURL('image/png'));
+    } else {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = name;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      toast('이미지를 저장했어요');
+    }
+  } catch {
+    toast('이미지를 만들지 못했어요');
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 function toast(msg) {
@@ -217,9 +344,12 @@ function toast(msg) {
 function route() {
   stopTimer();
   run = null;
-  const [, page, key] = location.hash.split('/');
+  const [, page, key, code] = location.hash.split('/');
   if (page === 't' && key === 'mental') { location.replace('#/t/friend'); return; }
-  if (page === 't' && TESTS[key]) intro(key); else home();
+  const ans = page === 'r' && TESTS[key] ? decodeAns(TESTS[key], code) : null;
+  if (ans) result(key, SCORE[key](TESTS[key], ans), code, true);
+  else if ((page === 't' || page === 'r') && TESTS[key]) intro(key);
+  else home();
   window.scrollTo(0, 0);
 }
 window.addEventListener('hashchange', route);
