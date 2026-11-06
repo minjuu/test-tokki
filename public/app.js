@@ -27,8 +27,8 @@ const SCORE = {
   },
   iq(t, ans) {
     const correct = t.items.filter((q, i) => ans[i] === q.a).length;
-    const iq = Math.max(70, 100 + (correct - 12) * 5);
-    return { ...t.results.find(r => iq >= r.min), label: '나의 두뇌 유형', num: iq, unit: '', sub: `20문제 중 ${correct}문제 정답`,
+    const iq = Math.max(70, Math.round(70 + correct / t.items.length * 70));
+    return { ...t.results.find(r => iq >= r.min), label: '나의 두뇌 유형', num: iq, unit: '', sub: `${t.items.length}문제 중 ${correct}문제 정답`,
       note: '이 사이트에서 만든 재미용 추정치예요. 공인 지능검사 결과가 아니에요.' };
   },
   mental(t, ans) {
@@ -55,8 +55,8 @@ const rowsHtml = skip => Object.entries(TESTS).filter(([k]) => k !== skip).map((
 
 function home() {
   app.innerHTML = `
-    <section class="hero"><h1>나를 알아보는<br>가장 빠른 3분</h1><p>궁금한 테스트를 골라보세요.</p></section>
-    <div class="list">${rowsHtml()}</div>`;
+    <section aria-labelledby="shelf"><p class="kicker">TODAY’S COLLECTION</p><h1 id="shelf">오늘은 어떤 테스트?</h1>
+    <div class="shelf">${Object.entries(TESTS).map(([key,t],i)=>`<a class="tile" href="#/t/${key}"><span class="tile-top"><span>TEST / 0${i+1}</span><span aria-hidden="true">↗</span></span><span class="tile-icon" aria-hidden="true">${t.mark}</span><strong>${t.title}</strong><span class="blurb">${t.desc}</span><small>${t.items.length}문항 · ${t.limit?'4분':'약 2분'}</small></a>`).join('')}</div></section>`;
 }
 
 function intro(key) {

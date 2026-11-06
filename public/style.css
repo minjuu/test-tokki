@@ -78,3 +78,12 @@ footer { padding: 20px 16px 32px; text-align: center; font-size: 12.5px; color: 
   .hero h1 { font-size: 23px; }
   .q { font-size: 18px; }
 }
+
+:root{--bg:#f2f7fc;--ink:#102f4e;--muted:#4b6881;--line:#d5e4f1;--soft:#e3effa;--blue:#1263ab}
+.kicker{font:700 11px/1.4 system-ui;letter-spacing:.16em;color:var(--blue);margin:16px 0 5px}
+#shelf{font-size:clamp(26px,5vw,36px);letter-spacing:-.06em;line-height:1.2;margin:0 0 20px}
+.shelf{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.tile{display:flex;flex-direction:column;align-items:flex-start;border:1px solid #bfd8ef;background:#deefff;color:#103d66;border-radius:20px;padding:clamp(14px,3vw,24px);word-break:keep-all}
+.tile:nth-child(2){background:#164b7c;color:white}.tile:nth-child(3){background:#cfeef1;color:#124f59}.tile:nth-child(4){background:#e9f2ff}
+.tile-top{display:flex;width:100%;justify-content:space-between;font:700 11px/1.4 system-ui;letter-spacing:.08em}.tile-icon{font-size:34px;margin:14px 0 8px}.tile strong{font-size:clamp(17px,3vw,23px);line-height:1.3}.blurb{font-size:13px;margin:6px 0 16px}.tile small{margin-top:auto;font-size:12px}.tile:hover{outline:2px solid var(--blue);outline-offset:1px}
+.primary,.opt.on,.progress i,.bar-track i{background:var(--blue)}.primary:hover{background:#0e508c}.opt.on{border-color:var(--blue)}.res-num,.logo{color:#114e80}
