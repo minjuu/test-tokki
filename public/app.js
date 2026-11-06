@@ -15,6 +15,15 @@ const pct = (sum, n) => Math.round(sum / (n * 4) * 100);
 
 // 채점: 답안을 받아 결과 객체를 돌려줘요
 const SCORE = {
+  chiikawa(t, answers) {
+    const counts = Object.fromEntries(Object.keys(t.profiles).map(k => [k, answers.filter(a => a === k).length]));
+    // 동점이면 마지막 장면부터 돌아보며 동점 캐릭터에 해당하는 가장 최근 선택을 사용한다.
+    const max = Math.max(...Object.values(counts));
+    const key = [...answers].reverse().find(k => counts[k] === max);
+    return { ...t.profiles[key], label: '나랑 닮은 먼작귀 친구', num: max, unit: ' / ' + answers.length,
+      sub: '닮은 선택', goodTitle: '이 선택에서 닮았어요', good: t.items.flatMap((q,i) => answers[i] === key ? [q.o.find(o => o[1] === key)[0]] : []),
+      note: '오늘의 선택으로 보는 비공식 팬 테스트예요.' };
+  },
   empathy(t, ans) {
     const dims = {};
     t.items.forEach((q, i) => {
@@ -146,7 +155,7 @@ function result(key, r) {
     <section class="card"><p class="body">${r.sum}</p></section>
     ${r.bars ? `<section class="card"><h2>영역별 점수</h2>${r.bars.map(([n, v]) => `
       <div class="bar"><div class="bar-top"><span>${n}</span><em>${v}</em></div><div class="bar-track"><i style="width:${v}%"></i></div></div>`).join('')}</section>` : ''}
-    <section class="card"><h2>이런 점이 좋아요</h2><ul>${r.good.map(x => `<li>${x}</li>`).join('')}</ul></section>
+    <section class="card"><h2>${r.goodTitle || '이런 점이 좋아요'}</h2><ul>${r.good.map(x => `<li>${x}</li>`).join('')}</ul></section>
     <section class="card"><h2>이렇게 해보세요</h2><ul>${r.tip.map(x => `<li>${x}</li>`).join('')}</ul></section>
     ${r.note ? `<p class="note">${r.note}</p>` : ''}
     <div style="margin-top:14px">
