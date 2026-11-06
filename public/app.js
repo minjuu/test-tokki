@@ -257,40 +257,86 @@ const loadImage = src => new Promise((ok, fail) => {
   img.src = src;
 });
 
+// 결과 화면의 내용을 세로로 긴 이미지 한 장에 그린다
 async function resultCanvas(key, r) {
-  const W = 1080, H = 1350, font = "'Apple SD Gothic Neo', 'Pretendard', sans-serif";
-  const canvas = document.createElement('canvas');
-  canvas.width = W;
-  canvas.height = H;
-  const ctx = canvas.getContext('2d');
-  const write = (text, y, size, weight, color) => {
-    ctx.font = `${weight} ${size}px ${font}`;
-    ctx.fillStyle = color;
-    ctx.fillText(text, W / 2, y);
-  };
-  await document.fonts?.ready;
-  ctx.fillStyle = '#f2f4f6';
-  ctx.fillRect(0, 0, W, H);
-  ctx.fillStyle = '#fff';
-  ctx.beginPath();
-  if (ctx.roundRect) ctx.roundRect(60, 60, W - 120, H - 120, 48); else ctx.rect(60, 60, W - 120, H - 120);
-  ctx.fill();
-  ctx.textAlign = 'center';
-  write(TESTS[key].title, 160, 36, 700, '#6b7684');
+  const W = 1080, L = 120, TW = W - L * 2, font = "'Apple SD Gothic Neo', 'Pretendard', sans-serif";
   const src = r.portraitKey ? `portraits/${r.portraitKey}.webp` : `test-art/${key}.png`;
   const art = await loadImage(src).catch(() => null);
-  if (art) {
-    const k = Math.min(280 / art.width, 280 / art.height);
-    ctx.drawImage(art, W / 2 - art.width * k / 2, 340 - art.height * k / 2, art.width * k, art.height * k);
-  } else if (r.mark) write(r.mark, 400, 180, 400, '#191f28');
-  write(r.label, 540, 34, 500, '#6b7684');
-  write(r.name, 625, 68, 800, '#191f28');
-  write(`${r.num}${r.unit}`, 745, 92, 800, '#191f28');
-  if (r.sub) write(r.sub, 800, 30, 500, '#6b7684');
-  ctx.font = `500 36px ${font}`;
-  ctx.fillStyle = '#333d4b';
-  wrapText(ctx, r.sum, 820, 6).forEach((line, i) => ctx.fillText(line, W / 2, 900 + i * 56));
-  write('오늘의테스트', 1240, 32, 800, '#191f28');
+  await document.fonts?.ready;
+  const paint = (ctx, H) => {
+    const set = (size, weight, color, align = 'left') => {
+      ctx.font = `${weight} ${size}px ${font}`;
+      ctx.fillStyle = color;
+      ctx.textAlign = align;
+    };
+    const center = (text, y, size, weight, color) => {
+      set(size, weight, color, 'center');
+      ctx.fillText(text, W / 2, y);
+    };
+    const para = (text, y, x = L, width = TW) => {
+      set(34, 500, '#333d4b');
+      for (const line of wrapText(ctx, text, width, Infinity)) {
+        ctx.fillText(line, x, y);
+        y += 52;
+      }
+      return y;
+    };
+    const heading = (text, y) => {
+      set(38, 800, '#191f28');
+      ctx.fillText(text, L, y);
+      return y + 62;
+    };
+    const bullets = (list, y) => {
+      for (const item of list) {
+        set(34, 500, '#333d4b');
+        ctx.fillText('•', L, y);
+        y = para(item, y, L + 34, TW - 34) + 10;
+      }
+      return y;
+    };
+    ctx.fillStyle = '#f2f4f6';
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(60, 60, W - 120, H - 120, 48); else ctx.rect(60, 60, W - 120, H - 120);
+    ctx.fill();
+    center(TESTS[key].title, 160, 36, 700, '#6b7684');
+    if (art) {
+      const k = Math.min(280 / art.width, 280 / art.height);
+      ctx.drawImage(art, W / 2 - art.width * k / 2, 340 - art.height * k / 2, art.width * k, art.height * k);
+    } else if (r.mark) center(r.mark, 400, 180, 400, '#191f28');
+    center(r.label, 540, 34, 500, '#6b7684');
+    center(r.name, 625, 68, 800, '#191f28');
+    center(`${r.num}${r.unit}`, 745, 92, 800, '#191f28');
+    let y = 800;
+    if (r.sub) { center(r.sub, y, 30, 500, '#6b7684'); y += 40; }
+    y = para(r.sum, y + 50) + 44;
+    if (r.bars) {
+      y = heading('영역별 점수', y);
+      for (const [name, v] of r.bars) {
+        set(32, 600, '#191f28');
+        ctx.fillText(name, L, y);
+        set(32, 700, '#191f28', 'right');
+        ctx.fillText(v, W - L, y);
+        ctx.fillStyle = '#e8ebef';
+        ctx.fillRect(L, y + 18, TW, 14);
+        ctx.fillStyle = '#191f28';
+        ctx.fillRect(L, y + 18, TW * v / 100, 14);
+        y += 78;
+      }
+      y += 30;
+    }
+    y = bullets(r.good, heading(r.goodTitle || '이런 점이 좋아요', y)) + 34;
+    if (r.match) y = para(r.match, heading('잘 맞는 사람', y)) + 44;
+    y = bullets(r.tip, heading(r.tipTitle || '이렇게 해보세요', y)) + 40;
+    center('오늘의테스트', y + 20, 32, 800, '#191f28');
+    return y + 110;
+  };
+  const canvas = document.createElement('canvas');
+  canvas.width = W;
+  canvas.height = 1;
+  canvas.height = paint(canvas.getContext('2d'), 1);
+  paint(canvas.getContext('2d'), canvas.height);
   return canvas;
 }
 
